@@ -105,11 +105,14 @@ class Game {
 
   laserAI() {
     let usefulGuesses = [];
-    for (let fuelSpent = 0;  fuelSpent< this.settings.hitTable[this.state.round - 1].length; fuelSpent++) {
-      const hitLikelyhood = 1.0 - this.settings.hitTable[this.state.round - 1][fuelSpent]/6.0;
-      console.log("LaserAI", fuelSpent, this.state.fuelLeft - this.state.roundsLeft, hitLikelyhood);
-      if (fuelSpent < 7) {
-        if (fuelSpent <= this.state.fuelLeft - this.state.roundsLeft) {
+    for (let fuelSpent = 0;  fuelSpent < this.settings.hitTable[this.state.round - 1].length; fuelSpent++) {
+      const missProb = this.settings.hitTable[this.state.round - 1][fuelSpent];
+
+      console.log("LaserAI", fuelSpent, this.state.fuelLeft, this.state.fuelLeft - this.state.roundsLeft + 1, fuelSpent <= this.state.fuelLeft - this.state.roundsLeft + 1, missProb, usefulGuesses);
+
+      // No point in guessing a value that is always safe for the missile
+      if (missProb > 1) {
+        if (fuelSpent <= this.state.fuelLeft - this.state.roundsLeft + 1) {
           usefulGuesses.push(fuelSpent);
         }
       }
@@ -119,7 +122,8 @@ class Game {
     if (usefulGuesses.length === 0) {
       return 0;
     } else {
-      return usefulGuesses[Math.floor(Math.random() * usefulGuesses.length)];
+      const randomIndex = Math.floor(Math.random() * usefulGuesses.length);
+      return usefulGuesses[randomIndex];
     }
   }
 }
