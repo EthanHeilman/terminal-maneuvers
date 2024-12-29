@@ -126,6 +126,12 @@ class Game {
       return usefulGuesses[randomIndex];
     }
   }
+
+  missileAI() {
+    const x = game.state.fuelLeft - game.state.roundsLeft + 2;
+    console.log("missileAI", x, this.state.fuelLeft, this.state.fuelLeft - this.state.roundsLeft + 1);
+    return Math.floor(Math.random() * x);
+  }
 }
 
 let game;
@@ -294,8 +300,7 @@ function playLaserCard(card) {
 
   setTimeout(() => {
     if (computerRole === "Missile") {
-      const x = game.state.fuelLeft - game.state.roundsLeft + 1;
-      const missileMove = Math.ceil(Math.random() * x);
+      const missileMove = game.missileAI();
       const result = game.turn(missileMove, card);
       recordAction(game.state, missileMove, card);
       checkRoundResult(result);
@@ -312,7 +317,6 @@ function playMissileCard(card) {
 
   setTimeout(() => {
       const result = game.turn(fuelBurned, laserGuess);
-
       recordAction(game.state, fuelBurned, laserGuess);
       checkRoundResult(result);
   }, 800);
