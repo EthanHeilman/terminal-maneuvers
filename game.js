@@ -188,6 +188,8 @@ function recordAction(state, fuelBurned, laserGuess) {
   let round = state.round -1;
   const cells = Array.from(gameBoard.children);
   const roundRow = round * 8;
+  missileFuelSpan.textContent = game.state.fuelLeft;
+
   console.log(round, roundRow, round, fuelBurned, laserGuess);
 
   if (fuelBurned === laserGuess) {
@@ -201,11 +203,15 @@ function recordAction(state, fuelBurned, laserGuess) {
 function playLaserCard(card) {
   disableCards();
   updateStatus(`You guessed ${card}. Missile is deciding...`);
+  console.log("ererssdf");
+
   setTimeout(() => {
     if (computerRole === "Missile") {
-      const missileMove = Math.floor(Math.random() * (game.state.fuelLeft + 1));
+      const x = game.state.fuelLeft - game.state.roundsLeft + 1;
+
+      console.log("x, fuel left, rounds left", x, game.state.fuelLeft, game.state.roundsLeft);
+      const missileMove = Math.floor(Math.random() * x);
       const result = game.turn(missileMove, card);
-      missileFuelSpan.textContent = game.state.fuelLeft;
       recordAction(game.state, missileMove, card);
       checkRoundResult(result);
     }
