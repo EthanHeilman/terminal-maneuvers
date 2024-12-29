@@ -250,13 +250,13 @@ function disableCards() {
 
 function recordAction(state, fuelBurned, laserGuess) {
   missileFuelSpan.textContent = game.state.fuelLeft;
+  roundsLeftSpan.textContent = game.state.roundsLeft;
+
   const cells = Array.from(gameBoard.children);
   const numColumns = game.settings.rounds + 1;
-  const row = numColumns * fuelBurned;
 
   const missilePos = numColumns * (fuelBurned + 1) + state.round - 1;
   const laserPos = numColumns * (laserGuess + 1) + state.round - 1;
-  console.log(state.round, numColumns, row, fuelBurned, laserGuess, missilePos, laserPos);
 
   const missileCell = cells[missilePos];
   const laserCell = cells[laserPos];
@@ -264,6 +264,7 @@ function recordAction(state, fuelBurned, laserGuess) {
   // Create new missile icon
   const newMissileIcon = document.createElement("div");
   newMissileIcon.className = "missile";
+  newMissileIcon.textContent = "🚀";
   newMissileIcon.style.top = missileCell.offsetTop + "px";
   newMissileIcon.style.left = missileCell.offsetLeft + "px";
   gameBoard.appendChild(newMissileIcon);
@@ -322,10 +323,10 @@ function checkRoundResult(result) {
         if (game.state.rolls[game.state.round-2] === 7) {
           updateStatus(`Missile moved to ${missileMove}, Laser guessed ${laserMove} and hit automatically`);
         } else {
-          updateStatus(`Missile moved to ${missileMove}, Laser guessed ${laserMove} and missed on a roll of ${game.state.rolls[game.state.round-2]}`);
+          updateStatus(`Missile moved to ${missileMove}, Laser guessed ${laserMove} and hit on a roll of ${game.state.rolls[game.state.round-2]} (miss required ${game.settings.hitTable[game.state.round-2][missileMove]}+)`);
         }
       } else {
-        updateStatus(`Missile moved to ${missileMove}, Laser guessed ${laserMove} and missed on roll of ${game.state.rolls[game.state.round-2]}`);
+        updateStatus(`Missile moved to ${missileMove}, Laser guessed ${laserMove} and missed on roll of ${game.state.rolls[game.state.round-2]} (miss required ${game.settings.hitTable[game.state.round-2][missileMove]}+)`);
       }
     } else {
       updateStatus(`Missile moved to ${missileMove}, Laser guessed ${laserMove}`);

@@ -34,21 +34,18 @@
     }
     .laser, .missile {
       position: absolute;
-      width: 30px; /* Smaller size */
-      height: 30px; /* Smaller size */
+      width: 50px; /* Smaller size */
+      height: 50px; /* Smaller size */
       border-radius: 50%;
       display: flex;
       justify-content: center;
       align-items: center;
-      font-size: 12px; /* Smaller font size */
+      font-size:40px; /* Smaller font size */
       color: #fff;
-      opacity: 0.7; /* Add transparency */
+      z-index: 10; /* Ensure icons are on top */
     }
     .laser {
-      background-color: rgba(0, 0, 255, 0.7); /* Blue with transparency */
-    }
-    .missile {
-      background-color: rgba(255, 0, 0, 0.7); /* Red with transparency */
+      background-color: rgba(128, 255, 0, 0.373); /* Blue with transparency */
     }
     .controls {
       margin-top: 20px;
@@ -76,7 +73,7 @@
     }
     #status {
       display: inline-block;
-      width: 400px; /* Adjust the width as needed */
+      width: 500px; /* Adjust the width as needed */
       height: 100px; /* Set a fixed height */
       border: 1px solid #ccc; /* Add a border to mimic a textbox */
       padding: 8px; /* Add some padding for better readability */
