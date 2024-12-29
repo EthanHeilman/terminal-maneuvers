@@ -15,28 +15,42 @@ class Settings {
     this.rounds = 5; // length of game in rounds
     this.startingFuel = 6;
     this.fuelChoices = [0, 1, 2, 3, 4, 5, 6];
-  }
-
-  hitFunct(round, fuelSpent) {
-    console.assert(round > 0);
-
     // 1 - always misses
     // 2 - roll d6: 2+ laser misses
     // 3 - roll d6: 3+ laser misses
     // ...
     // 7 - always hits
-    const hitTable = [
+    this.hitTable = [
       [7, 2, 1, 1, 1, 1, 1], // Round 1
       [7, 3, 2, 1, 1, 1, 1],
       [7, 4, 3, 2, 1, 1, 1],
       [7, 5, 4, 3, 2, 1, 1],
       [7, 6, 5, 4, 3, 2, 1], // Round 5
     ];
+  }
 
-    const needsToBeat = hitTable[round - 1][fuelSpent];
+  hitFunct(round, fuelSpent) {
+    console.assert(round > 0);
+    const needsToBeat = this.hitTable[round - 1][fuelSpent];
     const roll = Math.floor(Math.random() * 6) + 1;
 
     return { hit: roll < needsToBeat, roll };
+  }
+
+  hitTableText(round, fuelSpent) {
+    if (7 === this.hitTable[round - 1][fuelSpent]) {
+      return "Always hits";
+    } else if (1 === this.hitTable[round - 1][fuelSpent]) {
+      return "Always safe";
+    } else {
+      return `Safe on ${this.hitTable[round - 1][fuelSpent]}+`;
+    }
+  }
+
+  // This checks if a move would burn fuel without and additional evasion benefit.
+  // For instance if burning 2 fuel is always a miss, then burning 3 fuel is always a worse move.
+  wastefulMove(round, fuelSpent) {
+      return fuelSpent > 0 && this.hitTableText(round, fuelSpent-1) === "Always safe";
   }
 
   missilePlayer(state) {
@@ -88,6 +102,26 @@ class Game {
     }
     return Game.TURN_RESULT.NO_WINNER;
   }
+
+  laserAI() {
+    let usefulGuesses = [];
+    for (let fuelSpent = 0;  fuelSpent< this.settings.hitTable[this.state.round - 1].length; fuelSpent++) {
+      const hitLikelyhood = 1.0 - this.settings.hitTable[this.state.round - 1][fuelSpent]/6.0;
+      console.log("LaserAI", fuelSpent, this.state.fuelLeft - this.state.roundsLeft, hitLikelyhood);
+      if (fuelSpent < 7) {
+        if (fuelSpent <= this.state.fuelLeft - this.state.roundsLeft) {
+          usefulGuesses.push(fuelSpent);
+        }
+      }
+    }
+
+    // This can happen if the missile burns all its fuel. The missile loses the game on the next turn.
+    if (usefulGuesses.length === 0) {
+      return 0;
+    } else {
+      return usefulGuesses[Math.floor(Math.random() * usefulGuesses.length)];
+    }
+  }
 }
 
 let game;
@@ -132,28 +166,59 @@ function startGame(role) {
 
 function initializeBoard() {
   gameBoard.innerHTML = "";
-  const headers = ["Round", "Pay 0", "Pay 1", "Pay 2", "Pay 3", "Pay 4", "Pay 5", "Pay 6"];
-  headers.forEach((header) => {
-    const cell = document.createElement("div");
-    cell.className = "cell header";
-    cell.textContent = header;
-    gameBoard.appendChild(cell);
-  });
 
-  for (let round = 1; round <= game.settings.rounds; round++) {
-    for (let column = 0; column < 6 + 2; column++) {
-      const cell = document.createElement("div");
-      cell.className = "cell";
-      if (column === 0) {
-        cell.textContent = `Round ${round}`;
+  const numColumns = game.settings.rounds + 1;
+  const numRows = game.settings.fuelChoices.length-1;
+
+  console.log("numColumns", numColumns, "numRows", numRows);
+
+  // TODO: list
+  // XXX 1. Flip board
+  // XXX 2. Write roll to output
+  // XXX 3. write transcript to output
+  // 4. Move cards to clicking on board
+  // 5. Show blinking possible moves on the board
+  // XXX 6. Put missile and lasers are icons on the board
+  // 7. Make missile and laser icons look like a missile or a laser
+  gameBoard.style.gridTemplateColumns = `repeat(${numColumns}, 1fr)`;
+  for (let col = 0; col < numColumns; col++) {
+    const header = document.createElement("div");
+    header.className = "cell header";
+    if (col === 0) {
+      header.textContent = "Fuel Cost";
+    } else {
+      header.textContent = `Round ${col}`;
+    }
+    gameBoard.appendChild(header);
+  }
+
+  for (let row = 0; row <= numRows; row++) {
+    for (let col = 0; col < numColumns; col++) {
+      const fuel = row;
+      const round = col;
+
+      if (col === 0) {
+        const header = document.createElement("div");
+        header.className = "cell header";
+        header.textContent = `Pay ${fuel}`;
+        gameBoard.appendChild(header);
+      } else {
+        const cell = document.createElement("div");
+        cell.className = "cell";
+        cell.textContent = game.settings.hitTableText(round, fuel);
+
+        if (game.settings.wastefulMove(round, fuel)) {
+            cell.style.backgroundColor = "black";
+        }
+        gameBoard.appendChild(cell);
       }
-      gameBoard.appendChild(cell);
     }
   }
 }
 
 function updateStatus(message) {
-  statusDiv.textContent = message;
+  statusDiv.innerHTML += message + "<br>";
+  statusDiv.scrollTop = statusDiv.scrollHeight;
 }
 
 function updateMissileHand() {
@@ -178,38 +243,53 @@ function updateLaserHand() {
   }
 }
 
-
 function disableCards() {
   const cardElements = document.querySelectorAll(".card");
   cardElements.forEach((el) => el.classList.add("disabled"));
 }
 
 function recordAction(state, fuelBurned, laserGuess) {
-  let round = state.round -1;
-  const cells = Array.from(gameBoard.children);
-  const roundRow = round * 8;
   missileFuelSpan.textContent = game.state.fuelLeft;
+  const cells = Array.from(gameBoard.children);
+  const numColumns = game.settings.rounds + 1;
+  const row = numColumns * fuelBurned;
 
-  console.log(round, roundRow, round, fuelBurned, laserGuess);
+  const missilePos = numColumns * (fuelBurned + 1) + state.round - 1;
+  const laserPos = numColumns * (laserGuess + 1) + state.round - 1;
+  console.log(state.round, numColumns, row, fuelBurned, laserGuess, missilePos, laserPos);
 
-  if (fuelBurned === laserGuess) {
-    cells[roundRow + fuelBurned + 1].textContent = `Missile & Laser`;
-  } else {
-    cells[roundRow + fuelBurned + 1].textContent = `Missile`;
-    cells[roundRow + laserGuess + 1].textContent = `Laser`;
+  const missileCell = cells[missilePos];
+  const laserCell = cells[laserPos];
+
+  // Create new missile icon
+  const newMissileIcon = document.createElement("div");
+  newMissileIcon.className = "missile";
+  newMissileIcon.style.top = missileCell.offsetTop + "px";
+  newMissileIcon.style.left = missileCell.offsetLeft + "px";
+  gameBoard.appendChild(newMissileIcon);
+
+  // Create new laser icon
+  const newLaserIcon = document.createElement("div");
+  newLaserIcon.className = "laser";
+  newLaserIcon.style.top = laserCell.offsetTop + "px";
+  newLaserIcon.style.left = laserCell.offsetLeft + "px";
+  gameBoard.appendChild(newLaserIcon);
+
+  // Offset icons if they share the same cell
+  if (missilePos === laserPos) {
+    newMissileIcon.style.top = (missileCell.offsetTop + 5) + "px"; // Offset by 5px
+    newMissileIcon.style.left = (missileCell.offsetLeft + 5) + "px"; // Offset by 5px
+    newLaserIcon.style.top = (laserCell.offsetTop - 5) + "px"; // Offset by -5px
+    newLaserIcon.style.left = (laserCell.offsetLeft - 5) + "px"; // Offset by -5px
   }
 }
 
 function playLaserCard(card) {
   disableCards();
-  updateStatus(`You guessed ${card}. Missile is deciding...`);
-  console.log("ererssdf");
 
   setTimeout(() => {
     if (computerRole === "Missile") {
       const x = game.state.fuelLeft - game.state.roundsLeft + 1;
-
-      console.log("x, fuel left, rounds left", x, game.state.fuelLeft, game.state.roundsLeft);
       const missileMove = Math.ceil(Math.random() * x);
       const result = game.turn(missileMove, card);
       recordAction(game.state, missileMove, card);
@@ -220,34 +300,42 @@ function playLaserCard(card) {
 
 function playMissileCard(card) {
   disableCards();
-  updateStatus(`You guessed ${card}. Laser is deciding...`);
   const fuelBurned = parseInt(card, 10);
-  const laserGuess = Math.floor(Math.random() * game.state.fuelLeft);
 
-  if (isNaN(fuelBurned) || fuelBurned < 0 || fuelBurned > game.state.fuelLeft) {
-    alert("Invalid fuel amount!");
-    updateStatus("Laser wins!");
-    endGame("Laser wins!");
-    return;
-  }
+  const laserGuess = game.laserAI();
   missileFuelSpan.textContent = game.state.fuelLeft;
 
   setTimeout(() => {
       const result = game.turn(fuelBurned, laserGuess);
+
       recordAction(game.state, fuelBurned, laserGuess);
       checkRoundResult(result);
   }, 800);
 }
 
 function checkRoundResult(result) {
+    const missileMove = game.state.missileMoves[game.state.missileMoves.length-1];
+    const laserMove = game.state.laserMoves[game.state.laserMoves.length-1];
+
+    if (missileMove === laserMove) {
+      if (result === Game.TURN_RESULT.LASER_WINS) {
+        if (game.state.rolls[game.state.round-2] === 7) {
+          updateStatus(`Missile moved to ${missileMove}, Laser guessed ${laserMove} and hit automatically`);
+        } else {
+          updateStatus(`Missile moved to ${missileMove}, Laser guessed ${laserMove} and missed on a roll of ${game.state.rolls[game.state.round-2]}`);
+        }
+      } else {
+        updateStatus(`Missile moved to ${missileMove}, Laser guessed ${laserMove} and missed on roll of ${game.state.rolls[game.state.round-2]}`);
+      }
+    } else {
+      updateStatus(`Missile moved to ${missileMove}, Laser guessed ${laserMove}`);
+    }
+
   if (result === Game.TURN_RESULT.LASER_WINS) {
-    updateStatus("Laser wins!");
     endGame("Laser wins!");
   } else if (result === Game.TURN_RESULT.MISSILE_WINS) {
-    updateStatus("Missile wins!");
     endGame("Missile wins!");
   } else {
-    updateStatus("Next round!");
     if (playerRole === "Laser") {
       updateLaserHand();
     } else {
