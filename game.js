@@ -210,7 +210,7 @@ function playLaserCard(card) {
       const x = game.state.fuelLeft - game.state.roundsLeft + 1;
 
       console.log("x, fuel left, rounds left", x, game.state.fuelLeft, game.state.roundsLeft);
-      const missileMove = Math.floor(Math.random() * x);
+      const missileMove = Math.ceil(Math.random() * x);
       const result = game.turn(missileMove, card);
       recordAction(game.state, missileMove, card);
       checkRoundResult(result);
