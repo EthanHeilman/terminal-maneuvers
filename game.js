@@ -275,23 +275,19 @@ function recordAction(state, fuelBurned, laserGuess) {
   const newMissileIcon = document.createElement("div");
   newMissileIcon.className = "missile";
   newMissileIcon.textContent = "🚀";
-  newMissileIcon.style.top = missileCell.offsetTop + "px";
-  newMissileIcon.style.left = missileCell.offsetLeft + "px";
-  gameBoard.appendChild(newMissileIcon);
+  missileCell.appendChild(newMissileIcon);
 
   // Create new laser icon
   const newLaserIcon = document.createElement("div");
   newLaserIcon.className = "laser";
-  newLaserIcon.style.top = laserCell.offsetTop + "px";
-  newLaserIcon.style.left = laserCell.offsetLeft + "px";
-  gameBoard.appendChild(newLaserIcon);
+  laserCell.appendChild(newLaserIcon);
 
   // Offset icons if they share the same cell
   if (missilePos === laserPos) {
-    newMissileIcon.style.top = (missileCell.offsetTop + 5) + "px"; // Offset by 5px
-    newMissileIcon.style.left = (missileCell.offsetLeft + 5) + "px"; // Offset by 5px
-    newLaserIcon.style.top = (laserCell.offsetTop - 5) + "px"; // Offset by -5px
-    newLaserIcon.style.left = (laserCell.offsetLeft - 5) + "px"; // Offset by -5px
+    newMissileIcon.style.top = "6px"; // Offset by 5px
+    newMissileIcon.style.left = "6px"; // Offset by 5px
+    newLaserIcon.style.top = "-6px"; // Offset by -5px
+    newLaserIcon.style.left = "-6px"; // Offset by -5px
   }
 }
 
