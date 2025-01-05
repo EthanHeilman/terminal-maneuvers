@@ -66,7 +66,7 @@ class GameBoardUI {
     // 20. Disable board and announce winner
     // 21. Add new game button
     // 22. Clear up gross calls into game state
-    // 23. Pull CSS out of HTML
+    // XXX 23. Pull CSS out of HTML
     this.gameBoard.style.gridTemplateColumns = `repeat(${numColumns}, 1fr)`;
     for (let col = 0; col < numColumns; col++) {
       const header = document.createElement("div");
