@@ -146,62 +146,51 @@ class GameBoardUI {
     const cells = Array.from(this.gameBoard.children);
     const numColumns = this.game.settings.rounds + 1;
 
-    const missilePos = numColumns * (fuelBurned + 1) + state.round - 1;
-    const laserPos = numColumns * (laserGuess + 1) + state.round - 1;
+    const missilePos = numColumns * (fuelBurned + 1) + state.round;
+    const laserPos = numColumns * (laserGuess + 1) + state.round;
 
     const missileCell = cells[missilePos];
     const laserCell = cells[laserPos];
 
     // Create new missile icon
-    const newMissileIcon = document.createElement("div");
+    let newMissileIcon = document.createElement("div");
     newMissileIcon.className = "missile";
     newMissileIcon.textContent = "🚀";
     missileCell.appendChild(newMissileIcon);
 
     // Create new laser icon
-    const newLaserIcon = document.createElement("div");
+    let newLaserIcon = document.createElement("div");
     newLaserIcon.className = "laser";
+    newLaserIcon.textContent = "⊕";
     laserCell.appendChild(newLaserIcon);
 
-    // Offset icons if they share the same cell
+    const result = this.game.turn(fuelBurned, laserGuess);
+
+
+    // If they share the same cell
     if (missilePos === laserPos) {
-      newMissileIcon.style.top = "6px"; // Offset by 5px
-      newMissileIcon.style.left = "6px"; // Offset by 5px
-      newLaserIcon.style.top = "-6px"; // Offset by -5px
-      newLaserIcon.style.left = "-6px"; // Offset by -5px
-    }
-  }
+      if (result === Game.TURN_RESULT.LASER_WINS) {
+        newLaserIcon.style.left = "5px";
+        newMissileIcon.style.left = "5px";
+        newMissileIcon.textContent = "💥"; // Turn missile into explosion
 
-  playLaserCard(card) {
-    this.statusDiv.textContent = WAITING_ON_AI;
-    setTimeout(() => {
-      if (this.computerRole === "Missile") {
-        const missileMove = this.game.missileAI();
-        console.log("missileMove AI:", missileMove);
 
-        const result = this.game.turn(missileMove, card);
-        this.recordAction(this.game.state, missileMove, card);
-        this.checkRoundResult(result);
+        // Create hit
+        const hitIcon = document.createElement("div");
+        hitIcon.className = "hit";
+        hitIcon.textContent = "HIT";
+        missileCell.appendChild(hitIcon);
+        
+      } else { // else if miss, offset icons and mark as miss
+        newMissileIcon.style.left = "5px";
+        newLaserIcon.style.left = "45px";
+
+        const missIcon = document.createElement("div");
+        missIcon.className = "miss";
+        missIcon.textContent = "MISS";
+        missileCell.appendChild(missIcon);
       }
-    }, 100);
-  }
-
-  playMissileCard(card) {
-    this.statusDiv.textContent = WAITING_ON_AI;
-    const fuelBurned = parseInt(card, 10);
-
-    const laserGuess = this.game.laserAI();
-    console.log("laserGuess AI:", laserGuess);
-    this.missileFuelSpan.textContent = this.game.state.fuelLeft;
-
-    setTimeout(() => {
-        const result = this.game.turn(fuelBurned, laserGuess);
-        this.recordAction(this.game.state, fuelBurned, laserGuess);
-        this.checkRoundResult(result);
-    }, 100);
-  }
-
-  checkRoundResult(result) {
+    }
     const missileMove = this.game.state.missileMoves[this.game.state.missileMoves.length-1];
     const laserMove = this.game.state.laserMoves[this.game.state.laserMoves.length-1];
 
@@ -230,6 +219,38 @@ class GameBoardUI {
         this.updateMissileHand();
       }
     }
+  }
+
+  playLaserCard(card) {
+    this.statusDiv.textContent = WAITING_ON_AI;
+    setTimeout(() => {
+      if (this.computerRole === "Missile") {
+        const missileMove = this.game.missileAI();
+        console.log("missileMove AI:", missileMove);
+
+        // const result = this.game.turn(missileMove, card);
+        this.recordAction(this.game.state, missileMove, card);
+        // this.checkRoundResult(result);
+      }
+    }, 100);
+  }
+
+  playMissileCard(card) {
+    this.statusDiv.textContent = WAITING_ON_AI;
+    const fuelBurned = parseInt(card, 10);
+
+    const laserGuess = this.game.laserAI();
+    console.log("laserGuess AI:", laserGuess);
+    this.missileFuelSpan.textContent = this.game.state.fuelLeft;
+
+    setTimeout(() => {
+        this.recordAction(this.game.state, fuelBurned, laserGuess);
+        // this.checkRoundResult(result);
+    }, 100);
+  }
+
+  checkRoundResult(result) {
+    
   }
 
   endGame(result) {

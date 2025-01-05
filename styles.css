@@ -45,23 +45,46 @@ body {
 }
 .laser, .missile {
   position: absolute;
-  top: 0px;
-  left: -1px;
-  width: 50px; /* Smaller size */
-  height: 50px; /* Smaller size */
+  top: 45px;
+  left: 25px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size:40px; /* Smaller font size */
-  color: #fff;
-  z-index: 10; /* Ensure icons are on top */
+  font-size:25px;
+  color: #000000;
+  z-index: 10;
 }
 .laser {
-  background-color: rgba(128, 255, 0, 0.373); /* Blue with transparency */
+  background-color: rgba(119, 229, 9, 0.8);
+  color: rgba(119, 229, 9, 0.8);
+  z-index: 12; 
 }
-.controls {
-  margin-top: 20px;
+.hit {
+  position: absolute;
+  top: 40px;
+  left: 25px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 15px;
+  font-weight: bold;
+  color: #ff0000;
+  z-index: 12;
+}
+.miss {
+  position: absolute;
+  top: 30px;
+  left: 15px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 15px;
+  font-weight: bold;
+  color: #0091ff;
+  z-index: 12;
 }
 .disabled {
   opacity: 0.5;
@@ -73,32 +96,12 @@ body {
 }
 #transcript {
   display: inline-block;
-  width: 500px; /* Adjust the width as needed */
-  height: 40px; /* Set a fixed height */
-  border: 1px solid #ccc; /* Add a border to mimic a textbox */
-  padding: 8px; /* Add some padding for better readability */
-  overflow-y: auto; /* Enable vertical scrolling when content overflows */
-  background-color: #f9f9f9; /* Light background for better contrast */
-  font-size: 14px; /* Adjust font size for readability */
-  box-sizing: border-box; /* Ensure padding doesn't affect the width */
-}
-#laser-icon, #missile-icon {
-  position: absolute;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 16px;
-  color: #fff;
-  z-index: 10; /* Ensure icons are on top */
-}
-
-#laser-icon {
-  background-color: blue;
-}
-
-#missile-icon {
-  background-color: red;
+  width: 500px;
+  height: 40px;
+  border: 1px solid #ccc;
+  padding: 8px;
+  overflow-y: auto;
+  background-color: #f9f9f9;
+  font-size: 14px;
+  box-sizing: border-box;
 }
