@@ -20,9 +20,26 @@
       margin: 20px auto;
       width: 20%;
     }
+    @keyframes blink {
+      0% { border-color: transparent; }
+      40% { border-color: #ff0000; }
+      60% { border-color: #ff0000; }
+      100% { border-color: transparent; }
+    }
+    .blink-border {
+      position: absolute;
+      top: 1px; /* Adjust to sit inside the solid border */
+      left: 1px; /* Adjust to sit inside the solid border */
+      right: 1px; /* Adjust to sit inside the solid border */
+      bottom: 1px; /* Adjust to sit inside the solid border */
+      animation: blink 1s infinite; /* 1 second duration, infinite loop */
+      border: 4px dashed;
+    }
+    .solid-border {
+      border: 1px solid #000000;
+    }
     .cell {
       position: relative;
-      border: 1px solid #333;
       padding: 5px;
       font-size: 14px;
       text-align: center;
@@ -52,15 +69,6 @@
     }
     .controls {
       margin-top: 20px;
-    }
-    .card {
-      display: inline-block;
-      margin: 5px;
-      padding: 10px;
-      border: 2px solid #333;
-      background-color: #fff;
-      cursor: pointer;
-      font-size: 18px;
     }
     .disabled {
       opacity: 0.5;
@@ -121,15 +129,8 @@
       <span>Missile Fuel: <strong id="missile-fuel">6</strong></span>
     </div>
     <div class="board-visual" id="game-board"></div>
-    <div class="controls" id="laser-hand" style="display: none;">
-      <h3>Laser's Guess</h3>
-      <div id="cards"></div>
-    </div>
-    <div class="controls" id="missile-hand" style="display: none;">
-      <h3>Burn Fuel</h3>
-      <div id="missile-cards"></div>
-    </div>
   </div>
   <script src="game.js"></script>
+  <script src="logic.js"></script>
 </body>
 </html>
