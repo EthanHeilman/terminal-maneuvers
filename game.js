@@ -1,16 +1,23 @@
+// Messages:
+const WAITING_ON_MISSILE_PLAYER = "Waiting on Human player (Missile)...";
+const WAITING_ON_LASER_PLAYER = "Waiting on Human player (laser)...";
+const WAITING_ON_AI = "Waiting on AI to move...";
+
+const MISSILE_WINS = "MISSILE WINS!";
+const LASER_WINS = "LASER WINS!";
 
 class GameBoardUI {
+
   constructor() {
     this.game;
     this.playerRole = null;
     this.computerRole = null;
 
+    this.transcriptDiv = document.getElementById("transcript");
     this.statusDiv = document.getElementById("status");
     this.roundsLeftSpan = document.getElementById("rounds-left");
     this.missileFuelSpan = document.getElementById("missile-fuel");
     
-    this.fuelInput = document.getElementById("fuel-input");
-    this.burnFuelButton = document.getElementById("burn-fuel");
     this.gameBoard = document.getElementById("game-board");
     
     document.getElementById("play-as-laser").onclick = () => this.startGame("Laser");
@@ -32,10 +39,13 @@ class GameBoardUI {
     } else {
       this.updateMissileHand();
     }
-    this.updateStatus(`You are playing as ${this.playerRole}.`);
+    this.updateTranscript(`You are playing as ${this.playerRole}.`);
   }
 
   initializeBoard() {
+    this.missileFuelSpan.textContent = this.game.state.fuelLeft;
+    this.roundsLeftSpan.textContent = this.game.state.roundsLeft;
+
     this.gameBoard.innerHTML = "";
 
     const numColumns = this.game.settings.rounds + 1;
@@ -63,10 +73,12 @@ class GameBoardUI {
     // 17. Add icon for ship that laser is on
     // 18. Ship icon explodes when laser hits it
     // 19. Invert probabilities, so it shows missile hit chance
-    // 20. Disable board and announce winner
+    // XXX 20. Disable board and announce winner
     // 21. Add new game button
     // 22. Clear up gross calls into game state
     // XXX 23. Pull CSS out of HTML
+    // 24. Fix fuel choices
+    // 25. Change system delay for AI moves
     this.gameBoard.style.gridTemplateColumns = `repeat(${numColumns}, 1fr)`;
     for (let col = 0; col < numColumns; col++) {
       const header = document.createElement("div");
@@ -90,60 +102,40 @@ class GameBoardUI {
           header.textContent = `Pay ${fuel}`;
           this.gameBoard.appendChild(header);
         } else {
-          this.CreateCell(round, fuel);
+          this.createCell(round, fuel);
         }
       }
     }
   }
 
-  updateStatus(message) {
-    this.statusDiv.innerHTML += message + "<br>";
-    this.statusDiv.scrollTop = this.statusDiv.scrollHeight;
-  }
-
-
-  // Turn off all clickable blinking cells
-  setAllCellsToNonClickable() {
-    // TODO: replace this.game.settings.rounds and this.game.settings.fuelChoices.length with a simple function call
-    for (let round = 0; round < this.game.settings.rounds; round++) {
-      for (let card = 0; card < this.game.settings.fuelChoices.length; card++) {
-        console.log("111", 
-          this.game.settings.fuelChoices.length, this.game.state.round, round, card);
-
-        if ((this.game.settings.fuelChoices.length-1) < card) { 
-          console.log("222");
-          continue;
-        }
-        const cell = document.getElementById(`cell-${round+1}-${card}`);
-        this.RemoveBlinkToCell(cell, card);
-      }
-    }
+  updateTranscript(message) {
+    this.transcriptDiv.innerHTML += message + "<br>";
+    this.transcriptDiv.scrollTop = this.transcriptDiv.scrollHeight;
   }
 
   updateMissileHand() {
     this.setAllCellsToNonClickable();
-
+    this.statusDiv.textContent = WAITING_ON_MISSILE_PLAYER;
     for (let card = 0; card <= this.game.state.fuelLeft; card++) {
       console.log("updateLaserHand", this.game.settings.fuelChoices.length, this.game.state.round, card);
 
       if ((this.game.settings.fuelChoices.length-1) < card) { continue;}
 
-      console.log("zxc");
-
       const cell = document.getElementById(`cell-${this.game.state.round}-${card}`);
-      this.AddBlinkToCell(cell, () => this.playMissileCard(card));
+      this.makeCellClickable(cell, () => this.playMissileCard(card));
     }
   }
 
   updateLaserHand() {
     this.setAllCellsToNonClickable();
+    this.statusDiv.textContent = WAITING_ON_LASER_PLAYER;
     for (let card = 0; card <= this.game.state.fuelLeft; card++) {
       console.log("updateLaserHand", this.game.settings.fuelChoices.length, this.game.state.round, card);
 
       if ((this.game.settings.fuelChoices.length-1) < card) { continue;}
 
       const cell = document.getElementById(`cell-${this.game.state.round}-${card}`);
-      this.AddBlinkToCell(cell, () => this.playLaserCard(card));
+      this.makeCellClickable(cell, () => this.playLaserCard(card));
     }
   }
 
@@ -181,6 +173,7 @@ class GameBoardUI {
   }
 
   playLaserCard(card) {
+    this.statusDiv.textContent = WAITING_ON_AI;
     setTimeout(() => {
       if (this.computerRole === "Missile") {
         const missileMove = this.game.missileAI();
@@ -194,6 +187,7 @@ class GameBoardUI {
   }
 
   playMissileCard(card) {
+    this.statusDiv.textContent = WAITING_ON_AI;
     const fuelBurned = parseInt(card, 10);
 
     const laserGuess = this.game.laserAI();
@@ -207,28 +201,28 @@ class GameBoardUI {
     }, 100);
   }
 
-    checkRoundResult(result) {
-      const missileMove = this.game.state.missileMoves[this.game.state.missileMoves.length-1];
-      const laserMove = this.game.state.laserMoves[this.game.state.laserMoves.length-1];
+  checkRoundResult(result) {
+    const missileMove = this.game.state.missileMoves[this.game.state.missileMoves.length-1];
+    const laserMove = this.game.state.laserMoves[this.game.state.laserMoves.length-1];
 
-      if (missileMove === laserMove) {
-        if (result === Game.TURN_RESULT.LASER_WINS) {
-          if (this.game.state.rolls[this.game.state.round-2] === 7) {
-            this.updateStatus(`Missile moved to ${missileMove}, Laser guessed ${laserMove} and hit automatically`);
-          } else {
-            this.updateStatus(`Missile moved to ${missileMove}, Laser guessed ${laserMove} and hit on a roll of ${this.game.state.rolls[this.game.state.round-2]} (miss required ${this.game.settings.hitTable[this.game.state.round-2][missileMove]}+)`);
-          }
+    if (missileMove === laserMove) {
+      if (result === Game.TURN_RESULT.LASER_WINS) {
+        if (this.game.state.rolls[this.game.state.round-2] === 7) {
+          this.updateTranscript(`Missile moved to ${missileMove}, Laser guessed ${laserMove} and hit automatically`);
         } else {
-          this.updateStatus(`Missile moved to ${missileMove}, Laser guessed ${laserMove} and missed on roll of ${this.game.state.rolls[this.game.state.round-2]} (miss required ${this.game.settings.hitTable[this.game.state.round-2][missileMove]}+)`);
+          this.updateTranscript(`Missile moved to ${missileMove}, Laser guessed ${laserMove} and hit on a roll of ${this.game.state.rolls[this.game.state.round-2]} (miss required ${this.game.settings.hitTable[this.game.state.round-2][missileMove]}+)`);
         }
       } else {
-        this.updateStatus(`Missile moved to ${missileMove}, Laser guessed ${laserMove}`);
+        this.updateTranscript(`Missile moved to ${missileMove}, Laser guessed ${laserMove} and missed on roll of ${this.game.state.rolls[this.game.state.round-2]} (miss required ${this.game.settings.hitTable[this.game.state.round-2][missileMove]}+)`);
       }
+    } else {
+      this.updateTranscript(`Missile moved to ${missileMove}, Laser guessed ${laserMove}`);
+    }
 
     if (result === Game.TURN_RESULT.LASER_WINS) {
-      this.endGame("Laser wins!");
+      this.endGame(result);
     } else if (result === Game.TURN_RESULT.MISSILE_WINS) {
-      this.endGame("Missile wins!");
+      this.endGame(result);
     } else {
       if (this.playerRole === "Laser") {
         this.updateLaserHand();
@@ -238,12 +232,22 @@ class GameBoardUI {
     }
   }
 
-  endGame(message) {
-    this.updateStatus(message);
+  endGame(result) {
+    this.setAllCellsToNonClickable();
+    if (result === Game.TURN_RESULT.LASER_WINS) {
+      this.statusDiv.textContent = LASER_WINS;
+    } else if (result === Game.TURN_RESULT.MISSILE_WINS) {
+      this.statusDiv.textContent = MISSILE_WINS;
+    }
+
+    const newGameButton = document.createElement("button");
+    newGameButton.textContent = "New Game";
+    newGameButton.style.marginLeft = "10px";
+    newGameButton.onclick = () => location.reload();
+    this.statusDiv.appendChild(newGameButton);
   }
 
-
-  CreateCell(round, fuel) {
+  createCell(round, fuel) {
     const cell = document.createElement("div");
     cell.className = "cell";
     cell.className = "cell solid-border";
@@ -266,7 +270,7 @@ class GameBoardUI {
     return cell;
   }
 
-  AddBlinkToCell(cell, onClickFunction) {
+  makeCellClickable(cell, onClickFunction) {
     // Don't add blink to this cell as it is not playable
     if (cell.style.backgroundColor === "black") {
       return;
@@ -280,18 +284,26 @@ class GameBoardUI {
     cell.onclick = onClickFunction;
   }
 
-  RemoveBlinkToCell(cell, fuel) {
-    // Don't add blink to this cell as it is not playable
-    if (cell.style.backgroundColor === "black") {
-      return;
-    }
-
+  makeCellNotClickable(cell, fuel) {
     const blinkBorder = cell.querySelector('.blink-border');
     if (blinkBorder) {
       blinkBorder.style.display = 'none';
     }
-
     cell.onclick = null;
+  }
+
+  // Turn off all clickable blinking cells
+  setAllCellsToNonClickable() {
+    // TODO: replace this.game.settings.rounds and this.game.settings.fuelChoices.length with a simple function call
+    for (let round = 0; round < this.game.settings.rounds; round++) {
+      for (let card = 0; card < this.game.settings.fuelChoices.length; card++) {
+        if ((this.game.settings.fuelChoices.length-1) < card) { 
+          continue;
+        }
+        const cell = document.getElementById(`cell-${round+1}-${card}`);
+        this.makeCellNotClickable(cell, card);
+      }
+    }
   }
 }
 

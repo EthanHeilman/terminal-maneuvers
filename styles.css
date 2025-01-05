@@ -67,18 +67,14 @@ body {
   opacity: 0.5;
   pointer-events: none;
 }
-#fuel-input {
-  width: 50px;
-  font-size: 18px;
-}
 #round-info {
   font-size: 18px;
   margin: 10px 0;
 }
-#status {
+#transcript {
   display: inline-block;
   width: 500px; /* Adjust the width as needed */
-  height: 100px; /* Set a fixed height */
+  height: 40px; /* Set a fixed height */
   border: 1px solid #ccc; /* Add a border to mimic a textbox */
   padding: 8px; /* Add some padding for better readability */
   overflow-y: auto; /* Enable vertical scrolling when content overflows */
