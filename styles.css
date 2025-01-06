@@ -10,7 +10,7 @@ body {
 .board-visual {
   display: grid;
   gap: 5px;
-  margin: 20px auto;
+  margin: 5px auto;
   width: 20%;
 }
 @keyframes blink {
