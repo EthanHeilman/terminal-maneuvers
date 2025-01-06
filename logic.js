@@ -14,18 +14,18 @@ class State {
     constructor() {
       this.rounds = 5; // length of game in rounds
       this.startingFuel = 7;
-      this.fuelChoices = [0, 1, 2, 3, 4, 5, 6];
-      // 1 - always misses
+
+      // 1 - always hits
       // 2 - roll d6: 2+ laser misses
       // 3 - roll d6: 3+ laser misses
       // ...
-      // 7 - always hits
+      // 7 - always misses
       this.hitTable = [
-        [7, 2, 1, 1, 1, 1, 1], // Round 1
-        [7, 3, 2, 1, 1, 1, 1],
-        [7, 4, 3, 2, 1, 1, 1],
-        [7, 5, 4, 3, 2, 1, 1],
-        [7, 6, 5, 4, 3, 2, 1], // Round 5
+        [1, 6, 7, 7, 7, 7, 7], // Round 1
+        [1, 5, 6, 7, 7, 7, 7],
+        [1, 4, 5, 6, 7, 7, 7],
+        [1, 3, 4, 5, 6, 7, 7],
+        [1, 2, 3, 4, 5, 6, 7], // Round 5
       ];
     }
   
@@ -34,16 +34,16 @@ class State {
       const needsToBeat = this.hitTable[round - 1][fuelSpent];
       const roll = Math.floor(Math.random() * 6) + 1;
   
-      return { hit: roll < needsToBeat, roll };
+      return { hit: roll >= needsToBeat, roll };
     }
   
     hitTableText(round, fuelSpent) {
       if (7 === this.hitTable[round - 1][fuelSpent]) {
-        return "Always hits";
-      } else if (1 === this.hitTable[round - 1][fuelSpent]) {
         return "Always safe";
+      } else if (1 === this.hitTable[round - 1][fuelSpent]) {
+        return "Always hits";
       } else {
-        return `Safe on ${this.hitTable[round - 1][fuelSpent]}+`;
+        return `Hit on ${this.hitTable[round - 1][fuelSpent]}+`;
       }
     }
   
@@ -106,9 +106,9 @@ class State {
     laserAI() {
       let usefulGuesses = [];
       for (let fuelSpent = 0;  fuelSpent < this.settings.hitTable[this.state.round - 1].length; fuelSpent++) {
-        const missProb = this.settings.hitTable[this.state.round - 1][fuelSpent];
+        const hitRollNeeded = this.settings.hitTable[this.state.round - 1][fuelSpent];
         // No point in guessing a value that is always safe for the missile
-        if (missProb > 1) {
+        if (hitRollNeeded < 7) {
           if (fuelSpent <= this.state.fuelLeft - this.state.roundsLeft + 1) {
             usefulGuesses.push(fuelSpent);
           }
@@ -131,9 +131,9 @@ class State {
   
       let usefulGuesses = [];
       for (let fuelSpent = 0;  fuelSpent < this.settings.hitTable[this.state.round - 1].length; fuelSpent++) {
-        const missProb = this.settings.hitTable[this.state.round - 1][fuelSpent];
+        const hitRollNeeded = this.settings.hitTable[this.state.round - 1][fuelSpent];
         // No point in guessing a value that is always safe for the missile
-        if (missProb > 1) {
+        if (hitRollNeeded < 7) {
           if (fuelSpent <= this.state.fuelLeft - this.state.roundsLeft + 1) {
             usefulGuesses.push(fuelSpent);
           }

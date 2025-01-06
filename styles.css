@@ -96,7 +96,7 @@ body {
 }
 #transcript {
   display: inline-block;
-  width: 500px;
+  width: 250px;
   height: 40px;
   border: 1px solid #ccc;
   padding: 8px;

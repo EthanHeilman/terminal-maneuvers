@@ -49,7 +49,7 @@ class GameBoardUI {
     this.gameBoard.innerHTML = "";
 
     const numColumns = this.game.settings.rounds + 1;
-    const numRows = this.game.settings.fuelChoices.length-1;
+    const numRows = this.game.settings.startingFuel-1;
 
     console.log("numColumns", numColumns, "numRows", numRows);
 
@@ -62,23 +62,24 @@ class GameBoardUI {
     // XXX 6. Put missile and lasers are icons on the board
     // XXX 7. Make missile and laser icons look like a missile or a laser
     // XXX 8. Convert game UI to class
-    // 9. Make laser look like a target crosshairs
+    // XXX 9. Make laser look like a target cross hairs
     // XXX 10. Get clickable cells to work for laser and missile
     // XXX 11. Delete disabled cards
-    // 12. Have method for setting up the next round
-    // 13. Make missile explode when hit
+    // XXX 12. Have method for setting up the next round
+    // XXX 13. Make missile explode when hit
     // 14. Add effect for laser firing
-    // 15. Missile or crosshairs appear when moving over a cell
+    // 15. Missile or cross hairs appear when moving over a cell
     // 16. Draw path of missile
     // 17. Add icon for ship that laser is on
-    // 18. Ship icon explodes when laser hits it
-    // 19. Invert probabilities, so it shows missile hit chance
+    // XXX 18. Ship icon explodes when laser hits it
+    // XXX 19. Invert probabilities, so it shows missile hit chance
     // XXX 20. Disable board and announce winner
-    // 21. Add new game button
-    // 22. Clear up gross calls into game state
+    // XXX 21. Add new game button
+    // XXX 22. Clear up gross calls into game state
     // XXX 23. Pull CSS out of HTML
-    // 24. Fix fuel choices
-    // 25. Change system delay for AI moves
+    // XXX 24. Fix fuel choices
+    // XXX 25. Change system delay for AI moves
+    // 26. Add link to instructions
     this.gameBoard.style.gridTemplateColumns = `repeat(${numColumns}, 1fr)`;
     for (let col = 0; col < numColumns; col++) {
       const header = document.createElement("div");
@@ -116,41 +117,41 @@ class GameBoardUI {
   updateMissileHand() {
     this.setAllCellsToNonClickable();
     this.statusDiv.textContent = WAITING_ON_MISSILE_PLAYER;
-    for (let card = 0; card <= this.game.state.fuelLeft; card++) {
-      console.log("updateLaserHand", this.game.settings.fuelChoices.length, this.game.state.round, card);
-
-      if ((this.game.settings.fuelChoices.length-1) < card) { continue;}
-
-      const cell = document.getElementById(`cell-${this.game.state.round}-${card}`);
-      this.makeCellClickable(cell, () => this.playMissileCard(card));
+    for (let fuelCost = 0; fuelCost <= this.game.state.fuelLeft; fuelCost++) {
+      if (this.game.settings.wastefulMove(this.game.state.round, fuelCost)) { 
+        continue;
+      }
+      const cell = document.getElementById(`cell-${this.game.state.round}-${fuelCost}`);
+      this.makeCellClickable(cell, () => this.playMissileCard(fuelCost));
     }
   }
 
   updateLaserHand() {
     this.setAllCellsToNonClickable();
     this.statusDiv.textContent = WAITING_ON_LASER_PLAYER;
-    for (let card = 0; card <= this.game.state.fuelLeft; card++) {
-      console.log("updateLaserHand", this.game.settings.fuelChoices.length, this.game.state.round, card);
-
-      if ((this.game.settings.fuelChoices.length-1) < card) { continue;}
-
-      const cell = document.getElementById(`cell-${this.game.state.round}-${card}`);
-      this.makeCellClickable(cell, () => this.playLaserCard(card));
+    for (let fuelCost = 0; fuelCost <= this.game.state.fuelLeft; fuelCost++) {
+      if (this.game.settings.wastefulMove(this.game.state.round, fuelCost)) { 
+        continue;
+      }
+      const cell = document.getElementById(`cell-${this.game.state.round}-${fuelCost}`);
+      this.makeCellClickable(cell, () => this.playLaserCard(fuelCost));
     }
   }
 
-  recordAction(state, fuelBurned, laserGuess) {
-    this.missileFuelSpan.textContent = this.game.state.fuelLeft;
-    this.roundsLeftSpan.textContent = this.game.state.roundsLeft;
-
+  recordAction(fuelBurned, laserGuess) {
     const cells = Array.from(this.gameBoard.children);
     const numColumns = this.game.settings.rounds + 1;
 
-    const missilePos = numColumns * (fuelBurned + 1) + state.round;
-    const laserPos = numColumns * (laserGuess + 1) + state.round;
+    const missilePos = numColumns * (fuelBurned + 1) + this.game.state.round;
+    const laserPos = numColumns * (laserGuess + 1) + this.game.state.round;
 
     const missileCell = cells[missilePos];
     const laserCell = cells[laserPos];
+    console.log("fuel burned", fuelBurned);
+    const result = this.game.turn(fuelBurned, laserGuess);
+
+    this.missileFuelSpan.textContent = this.game.state.fuelLeft;
+    this.roundsLeftSpan.textContent = this.game.state.roundsLeft;
 
     // Create new missile icon
     let newMissileIcon = document.createElement("div");
@@ -164,9 +165,6 @@ class GameBoardUI {
     newLaserIcon.textContent = "⊕";
     laserCell.appendChild(newLaserIcon);
 
-    const result = this.game.turn(fuelBurned, laserGuess);
-
-
     // If they share the same cell
     if (missilePos === laserPos) {
       if (result === Game.TURN_RESULT.LASER_WINS) {
@@ -174,14 +172,13 @@ class GameBoardUI {
         newMissileIcon.style.left = "5px";
         newMissileIcon.textContent = "💥"; // Turn missile into explosion
 
-
         // Create hit
         const hitIcon = document.createElement("div");
         hitIcon.className = "hit";
         hitIcon.textContent = "HIT";
         missileCell.appendChild(hitIcon);
-        
-      } else { // else if miss, offset icons and mark as miss
+
+      } else { // Else if miss, offset icons and mark as miss
         newMissileIcon.style.left = "5px";
         newLaserIcon.style.left = "45px";
 
@@ -196,16 +193,16 @@ class GameBoardUI {
 
     if (missileMove === laserMove) {
       if (result === Game.TURN_RESULT.LASER_WINS) {
-        if (this.game.state.rolls[this.game.state.round-2] === 7) {
-          this.updateTranscript(`Missile moved to ${missileMove}, Laser guessed ${laserMove} and hit automatically`);
+        if (this.game.state.rolls[this.game.state.round-2] === 1) {
+          this.updateTranscript(`Hit: Missile=${missileMove}, Laser=${laserMove}`);
         } else {
-          this.updateTranscript(`Missile moved to ${missileMove}, Laser guessed ${laserMove} and hit on a roll of ${this.game.state.rolls[this.game.state.round-2]} (miss required ${this.game.settings.hitTable[this.game.state.round-2][missileMove]}+)`);
+          this.updateTranscript(`Hit: Missile=${missileMove}, Laser=${laserMove}, roll=${this.game.state.rolls[this.game.state.round-2]}`);
         }
       } else {
-        this.updateTranscript(`Missile moved to ${missileMove}, Laser guessed ${laserMove} and missed on roll of ${this.game.state.rolls[this.game.state.round-2]} (miss required ${this.game.settings.hitTable[this.game.state.round-2][missileMove]}+)`);
+        this.updateTranscript(`Miss: Missile=${missileMove}, Laser=${laserMove}, roll=${this.game.state.rolls[this.game.state.round-2]}`);
       }
     } else {
-      this.updateTranscript(`Missile moved to ${missileMove}, Laser guessed ${laserMove}`);
+      this.updateTranscript(`Miss: Missile=${missileMove}, Laser=${laserMove}`);
     }
 
     if (result === Game.TURN_RESULT.LASER_WINS) {
@@ -223,34 +220,15 @@ class GameBoardUI {
 
   playLaserCard(card) {
     this.statusDiv.textContent = WAITING_ON_AI;
-    setTimeout(() => {
-      if (this.computerRole === "Missile") {
-        const missileMove = this.game.missileAI();
-        console.log("missileMove AI:", missileMove);
-
-        // const result = this.game.turn(missileMove, card);
-        this.recordAction(this.game.state, missileMove, card);
-        // this.checkRoundResult(result);
-      }
-    }, 100);
+    const missileMove = this.game.missileAI();
+    this.recordAction(missileMove, card);
   }
 
   playMissileCard(card) {
     this.statusDiv.textContent = WAITING_ON_AI;
     const fuelBurned = parseInt(card, 10);
-
     const laserGuess = this.game.laserAI();
-    console.log("laserGuess AI:", laserGuess);
-    this.missileFuelSpan.textContent = this.game.state.fuelLeft;
-
-    setTimeout(() => {
-        this.recordAction(this.game.state, fuelBurned, laserGuess);
-        // this.checkRoundResult(result);
-    }, 100);
-  }
-
-  checkRoundResult(result) {
-    
+    this.recordAction(fuelBurned, laserGuess);
   }
 
   endGame(result) {
@@ -313,16 +291,16 @@ class GameBoardUI {
     cell.onclick = null;
   }
 
-  // Turn off all clickable blinking cells
+
   setAllCellsToNonClickable() {
-    // TODO: replace this.game.settings.rounds and this.game.settings.fuelChoices.length with a simple function call
+      // Turn off all clickable blinking cells
     for (let round = 0; round < this.game.settings.rounds; round++) {
-      for (let card = 0; card < this.game.settings.fuelChoices.length; card++) {
-        if ((this.game.settings.fuelChoices.length-1) < card) { 
+      for (let fuelCost = 0; fuelCost < this.game.settings.startingFuel; fuelCost++) {
+        if ((this.game.settings.startingFuel-1) < fuelCost) { 
           continue;
         }
-        const cell = document.getElementById(`cell-${round+1}-${card}`);
-        this.makeCellNotClickable(cell, card);
+        const cell = document.getElementById(`cell-${round+1}-${fuelCost}`);
+        this.makeCellNotClickable(cell, fuelCost);
       }
     }
   }
