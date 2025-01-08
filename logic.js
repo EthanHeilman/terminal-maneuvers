@@ -43,7 +43,7 @@ class State {
       } else if (1 === this.hitTable[round - 1][fuelSpent]) {
         return "Always hits";
       } else {
-        return `Hit on ${this.hitTable[round - 1][fuelSpent]}+`;
+        return `Hit Prob ${7-this.hitTable[round - 1][fuelSpent]}/6`;
       }
     }
   

@@ -96,12 +96,20 @@ body {
 }
 #transcript {
   display: inline-block;
-  width: 250px;
-  height: 40px;
+  width: 400px;
+  height: 30px;
   border: 1px solid #ccc;
-  padding: 8px;
+  padding: 10px;
   overflow-y: auto;
   background-color: #f9f9f9;
   font-size: 14px;
   box-sizing: border-box;
+  text-align: left;
+}
+#instructions {
+  display: inline-block;
+  width: 600px;
+  padding: 8px;
+  font-size: 14px;
+  text-align: left;
 }
