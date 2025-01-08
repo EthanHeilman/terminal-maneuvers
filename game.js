@@ -193,12 +193,12 @@ class GameBoardUI {
 
     if (missileMove === laserMove) {
       if (result === Game.TURN_RESULT.LASER_WINS) {
-          this.updateTranscript(`Round-${this.game.state.round-1}: Hit! Missile=${missileMove}, Laser=${laserMove}`);
+          this.updateTranscript(`HIT in round-${this.game.state.round-1}: Missile=${missileMove}, Laser=${laserMove}`);
       } else {
-        this.updateTranscript(`Round-${this.game.state.round-1}: Miss! Missile=${missileMove}, Laser=${laserMove}`);
+        this.updateTranscript(`MISS in round-${this.game.state.round-1}: Missile=${missileMove}, Laser=${laserMove}`);
       }
     } else {
-      this.updateTranscript(`Round-${this.game.state.round-1}: Miss! Missile=${missileMove}, Laser=${laserMove}`);
+      this.updateTranscript(`MISS in round-${this.game.state.round-1}: Missile=${missileMove}, Laser=${laserMove}`);
     }
 
     if (result === Game.TURN_RESULT.LASER_WINS) {

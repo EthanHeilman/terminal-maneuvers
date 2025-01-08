@@ -11,7 +11,27 @@
   <div id="instructions">
   <strong>Instructions:</strong><br/>
   The missile's goal is survive five rounds without being hit by the laser.
-  Each round, the missile chooses how much of its remaining fuel to burn (more fuel burned = harder to hit) and the laser attempts to hit this missile by guessing how much fuel the missile spent that round.
+  Each round, the missile chooses how much of its remaining fuel to burn (more fuel burned = harder to hit) and the laser attempts to hit this missile by guessing how much fuel the missile spent that round. <br/>
+  <details>
+    <summary><strong>Full Rules</strong></summary>
+    <div id="instructions-content">
+      <hr>
+      <ul>
+        <li>There are 5 rounds.</li>
+        <li>In each round, the missile chooses how much of its remaining fuel to burn, and the laser tries to guess how much fuel the missile choose.</li>
+        <li>If the laser correctly guesses the amount of fuel the missile burned, refer to the corresponding tile on the board to see the probability of the laser hitting the missile.
+          <ul>
+            <li>For instance, if in Round 3 the missile used 2 fuel and the laser guessed 2 fuel, then the laser hits the missile with a 2/6 probability (approximately 0.33).</li>
+            <li>The computer rolls a d6 to determine the outcome.</li>
+          </ul>
+        </li>
+        <li>The missile starts with 7 fuel and spends between 0 to 6 fuel per round.</li>
+        <li>The missile wins if by the end of round 5, it has not been hit.</li>
+        <li>The laser wins if it hits the missile.</li>
+        <li>Additional information at <a href=https://github.com/ethanheilman/terminal-maneuvers>github.com/wthanHeilman/terminal-maneuvers</a>.</li>
+      </ul>
+    </div>
+  </details>
   <hr>
   </div>
 
